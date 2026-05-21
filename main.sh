@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+# Limitar threads para PyTorch/FAISS — 128 cores genera overhead excesivo
+export OMP_NUM_THREADS=32
+export MKL_NUM_THREADS=32
+
 echo "════════════════════════════════════════════"
 echo " RAG-FT-e5-small — Pipeline completo"
 echo "════════════════════════════════════════════"
