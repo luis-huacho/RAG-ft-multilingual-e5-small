@@ -18,6 +18,7 @@ import pickle
 import json
 import math
 import time
+import random
 from datetime import datetime
 import numpy as np
 import faiss
@@ -108,6 +109,12 @@ def cmd_testset(args):
     with open("output/chunks.pkl", "rb") as f:
         chunks = pickle.load(f)
     print(f"  {len(chunks):,} chunks")
+
+    # Samplear subconjunto para RAGAS (construye grafo de conocimiento con 1 llamada LLM por doc)
+    if args.max_docs and len(chunks) > args.max_docs:
+        random.seed(42)
+        chunks = random.sample(chunks, args.max_docs)
+        print(f"  Sampleados {args.max_docs:,} chunks para generacion de testset")
 
     # Crear documentos LangChain
     documents = [
@@ -408,6 +415,7 @@ def main():
     # Subcomando: testset
     ts_parser = subparsers.add_parser("testset", help="Generar testset sintetico")
     ts_parser.add_argument("--size", type=int, default=50, help="Cantidad de preguntas")
+    ts_parser.add_argument("--max-docs", type=int, default=500, help="Max chunks para RAGAS (0=todos)")
     ts_parser.add_argument("--simple", type=float, default=0.4, help="Proporcion simple")
     ts_parser.add_argument("--reasoning", type=float, default=0.3, help="Proporcion reasoning")
     ts_parser.add_argument("--multi_context", type=float, default=0.3, help="Proporcion multi_context")

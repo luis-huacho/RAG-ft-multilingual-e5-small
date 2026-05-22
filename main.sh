@@ -12,20 +12,44 @@ echo ""
 
 # --- FASE 1: Ingest corpus RAG ---
 echo "FASE 1: Ingest corpus RAG"
-python chunking.py rag
-python faiss_index.py base
+if [ -f output/chunks.pkl ]; then
+    echo "  [skip] output/chunks.pkl ya existe"
+else
+    python chunking.py rag
+fi
+if [ -f output/faiss_base/index.faiss ]; then
+    echo "  [skip] output/faiss_base/index.faiss ya existe"
+else
+    python faiss_index.py base
+fi
 echo ""
 
 # --- FASE 2: Evaluacion base ---
 echo "FASE 2: Evaluacion base"
-python ragas_eval.py testset --size 50
-python ragas_eval.py evaluate base
+if [ -f output/testset.json ]; then
+    echo "  [skip] output/testset.json ya existe"
+else
+    python ragas_eval.py testset --size 50
+fi
+if [ -f output/eval_base.json ]; then
+    echo "  [skip] output/eval_base.json ya existe"
+else
+    python ragas_eval.py evaluate base
+fi
 echo ""
 
 # --- FASE 3: Preparacion fine-tuning ---
 echo "FASE 3: Preparacion fine-tuning"
-python chunking.py ft
-python ft_data.py
+if [ -f output/chunks_ft.pkl ]; then
+    echo "  [skip] output/chunks_ft.pkl ya existe"
+else
+    python chunking.py ft
+fi
+if [ -f output/ft_train_data.json ]; then
+    echo "  [skip] output/ft_train_data.json ya existe"
+else
+    python ft_data.py
+fi
 echo ""
 
 # --- FASE 4: Fine-tuning + evaluacion (4 variantes) ---
@@ -33,13 +57,25 @@ echo "FASE 4: Fine-tuning + evaluacion"
 for L in 1 2 3 4; do
     echo ""
     echo "  -- Variante L${L} --"
-    python ft_process.py --layers $L
-    python faiss_index.py ft_L$L
-    python ragas_eval.py evaluate ft_L$L
+    if [ -d "output/ft_model_L${L}" ]; then
+        echo "  [skip] output/ft_model_L${L} ya existe"
+    else
+        python ft_process.py --layers $L
+    fi
+    if [ -f "output/faiss_ft_L${L}/index.faiss" ]; then
+        echo "  [skip] output/faiss_ft_L${L}/index.faiss ya existe"
+    else
+        python faiss_index.py ft_L$L
+    fi
+    if [ -f "output/eval_ft_L${L}.json" ]; then
+        echo "  [skip] output/eval_ft_L${L}.json ya existe"
+    else
+        python ragas_eval.py evaluate ft_L$L
+    fi
 done
 echo ""
 
-# --- FASE 5: Reporte ---
+# --- FASE 5: Reporte (siempre regenerar) ---
 echo "FASE 5: Generando reporte"
 python result.py
 echo ""

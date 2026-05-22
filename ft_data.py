@@ -15,6 +15,7 @@ import argparse
 import os
 import pickle
 import json
+import random
 import torch
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
@@ -63,6 +64,7 @@ def find_best_chunk(context_text, chunks, threshold=0.3):
 def main():
     parser = argparse.ArgumentParser(description="Generar datos de entrenamiento para FT")
     parser.add_argument("--size", type=int, default=500, help="Preguntas a generar con RAGAS")
+    parser.add_argument("--max-docs", type=int, default=500, help="Max chunks para RAGAS (0=todos)")
     parser.add_argument("--simple", type=float, default=0.5, help="Proporcion simple")
     parser.add_argument("--reasoning", type=float, default=0.3, help="Proporcion reasoning")
     parser.add_argument("--multi_context", type=float, default=0.2, help="Proporcion multi_context")
@@ -76,13 +78,20 @@ def main():
         chunks = pickle.load(f)
     print(f"  {len(chunks):,} chunks cargados")
 
+    # Samplear subconjunto para RAGAS (construye grafo de conocimiento con 1 llamada LLM por doc)
+    chunks_for_ragas = chunks
+    if args.max_docs and len(chunks) > args.max_docs:
+        random.seed(42)
+        chunks_for_ragas = random.sample(chunks, args.max_docs)
+        print(f"  Sampleados {args.max_docs:,} chunks para generacion de testset")
+
     # Crear documentos LangChain desde los chunks FT
     documents = [
         Document(
             page_content=c["text"],
             metadata={"chunk_id": c["chunk_id"], "source": c["source_file"]},
         )
-        for c in chunks
+        for c in chunks_for_ragas
     ]
 
     # Configurar RAGAS
