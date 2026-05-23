@@ -1,0 +1,27 @@
+{
+  "run_id": "ft_L1_20260522_171026",
+  "timestamp": "2026-05-22T17:16:21.026546",
+  "device": {
+    "type": "cpu",
+    "name": "cpu",
+    "vram_gb": 0
+  },
+  "config": {
+    "base_model": "intfloat/multilingual-e5-small",
+    "layers_unfrozen": 1,
+    "total_layers": 12,
+    "unfrozen_layers": [
+      11
+    ],
+    "epochs": 3,
+    "batch_size": 16,
+    "learning_rate": 2e-05,
+    "loss": "MultipleNegativesRankingLoss",
+    "train_samples": 537
+  },
+  "trainable_params": 1774464,
+  "total_params": 117653760,
+  "trainable_pct": "1.5%",
+  "total_duration_s": 349.0,
+  "output_dir": "output/ft_model_L1/"
+}
